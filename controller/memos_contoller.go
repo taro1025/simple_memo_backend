@@ -27,9 +27,9 @@ func CreateMemo(c *gin.Context) {
 
 func Index(c *gin.Context) {
 	memoService :=service.MemoService{}
-	BookLists := memoService.Index()
+	memos := memoService.Index()
 	c.JSONP(http.StatusOK, gin.H{
 		"message": "ok",
-		"data": BookLists,
+		"data": memos,
 	})
 }
