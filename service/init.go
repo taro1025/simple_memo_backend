@@ -36,5 +36,6 @@ func init() {
 	DbEngine.ShowSQL(true)           //クエリのログを出す
 	DbEngine.SetMaxOpenConns(2)      //同時接続の数？
 	DbEngine.Sync2(new(model.Memo)) 	   //NewEngineで指定したsimple_memoDBとMemo構造を同期させる
+	DbEngine.Sync2(new(model.User))
 	fmt.Println("init data base ok")
 }
