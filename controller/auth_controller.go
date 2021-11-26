@@ -1,10 +1,8 @@
 package controller
 
 import (
-	"encoding/json"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"simple_memo/model"
 	"simple_memo/service"
@@ -20,31 +18,31 @@ import (
 //}
 
 func Login(c *gin.Context) {
-	request := model.User{}
-	err := c.Bind(&request)
-	if err != nil {
-		c.Status(http.StatusBadRequest)
-	} else {
-		// メールアドレスでDBからユーザ取得
-		userService := service.UserService{}
-		user, err := userService.GetUser(request.Email)
-		// ハッシュ値でのパスワード比較
-		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
-		if err != nil {
-			c.Status(http.StatusBadRequest)
-		} else {
-			session := sessions.Default(c)
-			// セッションに格納する為にユーザ情報をJson化
-			loginUser, err := json.Marshal(user)
-			if err == nil {
-				session.Set("loginUser", string(loginUser))
-				session.Save()
-				c.Status(http.StatusOK)
-			} else {
-				c.Status(http.StatusInternalServerError)
-			}
-		}
-	}
+	//request := model.User{}
+	//err := c.Bind(&request)
+	//if err != nil {
+	//	c.Status(http.StatusBadRequest)
+	//} else {
+	//	// メールアドレスでDBからユーザ取得
+	//	userService := service.UserService{}
+	//	user, err := userService.GetUser(request.Email)
+	// ハッシュ値でのパスワード比較
+	//err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
+	//if err != nil {
+	//	c.Status(http.StatusBadRequest)
+	//} else {
+	//	session := sessions.Default(c)
+	//	// セッションに格納する為にユーザ情報をJson化
+	//	loginUser, err := json.Marshal(user)
+	//	if err == nil {
+	//		session.Set("loginUser", string(loginUser))
+	//		session.Save()
+	//		c.Status(http.StatusOK)
+	//	} else {
+	//		c.Status(http.StatusInternalServerError)
+	//	}
+	//}
+//}
 }
 func Logout(c *gin.Context) {
 	session := sessions.Default(c)

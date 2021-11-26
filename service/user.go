@@ -23,7 +23,7 @@ func (UserService) SetUser(user *model.User) error {
 	return nil
 }
 
-func (UserService) GetUser(email string) (model.User, error) {
+func (UserService) GetUser(email string) (model.User, bool) {
 	user := model.User{}
 	result, err := DbEngine.Where("email = ?", email).Get(&user)
 	if err != nil {
@@ -32,5 +32,5 @@ func (UserService) GetUser(email string) (model.User, error) {
 	if !result {
 		log.Fatal("Not Found")
 	}
-	return user, err
+	return user, result
 }
