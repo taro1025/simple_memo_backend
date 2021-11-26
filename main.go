@@ -1,18 +1,21 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
 	_ "github.com/go-sql-driver/mysql"
+	"net/http"
 	"simple_memo/controller"
+	"simple_memo/middleware"
 	"time"
 	//
 	//"jwt_work/register"
 	//"jwt_work/login"
 	//"jwt_work/user"
 )
+
 //gin
 //https://github.com/gin-gonic/gin#gin-v1-stable
 
@@ -24,6 +27,8 @@ func main() {
 func setupRouter() *gin.Engine {
 	router := gin.Default()
 	store := cookie.NewStore([]byte("secret"))
+	options := sessions.Options{SameSite: http.SameSiteNoneMode, Secure: true}
+	store.Options(options)
 	router.Use(sessions.Sessions("simple_memo", store))
 
 	setCors(router)
@@ -32,6 +37,7 @@ func setupRouter() *gin.Engine {
 	v1 := router.Group("/v1")
 	{
 		memo := v1.Group("/memos")
+		memo.Use(middleware.LoginCheckMiddleware())
 		{
 			memo.GET("/index", controller.Index)
 			memo.POST("/create", controller.CreateMemo)
@@ -46,7 +52,7 @@ func setupRouter() *gin.Engine {
 	return router
 }
 
-func setCors(router *gin.Engine ) {
+func setCors(router *gin.Engine) {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			"http://localhost:3000",
