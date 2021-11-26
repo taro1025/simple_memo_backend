@@ -36,11 +36,12 @@ func setupRouter() *gin.Engine {
 			memo.GET("/index", controller.Index)
 			memo.POST("/create", controller.CreateMemo)
 		}
-		//auth := v1.Group("/auth")
-		//{
-		//	auth.POST("/login", controller.Login)
-		//	auth.GET("/logout", controller.Logout)
-		//}
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/login", controller.Login)
+			auth.GET("/logout", controller.Logout)
+			auth.POST("/signup", controller.CreateUser)
+		}
 	}
 	return router
 }
