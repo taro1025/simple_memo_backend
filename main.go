@@ -50,7 +50,10 @@ func setupRouter() *gin.Engine {
 	v1 := router.Group("/v1")
 	{
 		v1.POST("/login", authMiddleware.LoginHandler)
-		v1.POST("/signup", controller.CreateUser)
+		user := v1.Group("/users")
+		{
+			user.POST("/create", controller.CreateUser)
+		}
 		memo := v1.Group("/memos")
 		memo.Use(authMiddleware.MiddlewareFunc())
 		{
