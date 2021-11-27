@@ -8,7 +8,6 @@ import (
 	"log"
 	"simple_memo/controller"
 	"simple_memo/middleware"
-	"simple_memo/model"
 	"time"
 	//
 	//"jwt_work/register"
@@ -24,24 +23,23 @@ func main() {
 }
 
 func helloHandler(c *gin.Context) {
-	claims := jwt.ExtractClaims(c)
-	user, _ := c.Get(identityKey)
+	if _, err := c.Cookie("jwt"); err != nil {
+		log.Printf("no cookie")
+	} else {log.Printf("Ok cookie")}
+	//claims := jwt.ExtractClaims(c)
+	//user, _ := c.Get(identityKey)
 	c.JSON(200, gin.H{
-		"userID":   claims[identityKey],
-		"userName": user.(*model.User).Email,
+		//"userID":   claims[identityKey],
+		//"userName": user.(*model.User).Email,
 		"text":     "Hello World.",
 	})
 }
 
+//TODO railsみたいにpathを返すヘルパーを使いたい
 func setupRouter() *gin.Engine {
 	router := gin.Default()
-	//store := cookie.NewStore([]byte("secret"))
-	//options := sessions.Options{SameSite: http.SameSiteNoneMode, Secure: true}
-	//store.Options(options)
-	//router.Use(sessions.Sessions("simple_memo", store))
 	setCors(router)
 	authMiddleware := middleware.Auth()
-
 
 	router.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
 		claims := jwt.ExtractClaims(c)
@@ -49,12 +47,10 @@ func setupRouter() *gin.Engine {
 		c.JSON(404, gin.H{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
 	})
 
-	//TODO railsみたいにpathを返すヘルパーを使いたい
 	v1 := router.Group("/v1")
 	{
 		v1.POST("/login", authMiddleware.LoginHandler)
 		v1.POST("/signup", controller.CreateUser)
-
 		memo := v1.Group("/memos")
 		memo.Use(authMiddleware.MiddlewareFunc())
 		{
@@ -67,7 +63,7 @@ func setupRouter() *gin.Engine {
 		{
 			auth.GET("/hello", helloHandler)
 			//auth.POST("/login", controller.Login)
-			auth.GET("/logout", controller.Logout)
+			auth.POST("/logout", authMiddleware.LogoutHandler)
 		}
 	}
 	return router
@@ -77,7 +73,6 @@ func setCors(router *gin.Engine) {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			"http://localhost:3000",
-			"*",
 		},
 		AllowMethods: []string{
 			"POST",
@@ -93,6 +88,7 @@ func setCors(router *gin.Engine) {
 			"Content-Length",
 			"Accept-Encoding",
 			"Authorization",
+			"Set-Cookie",
 		},
 		AllowCredentials: true,
 		// preflightリクエストの結果をキャッシュする時間
