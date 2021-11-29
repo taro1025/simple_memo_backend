@@ -7,9 +7,8 @@ import (
 
 type MemoService struct {}
 
-func (MemoService) SetMemo(memo *model.Memo) error {
-	_, err := DbEngine.Insert(memo)
-	if err!= nil{
+func (MemoService) SetMemo(user *model.User, memo *model.Memo) error {
+	if err := Db.Model(user).Association("Memos").Append(memo); err != nil{
 		fmt.Println(err)
 		return  err
 	}
@@ -21,7 +20,7 @@ func (MemoService) SetMemo(memo *model.Memo) error {
 
 func (MemoService) Index() []model.Memo{
 	memos := make([]model.Memo, 0)
-	err := DbEngine.Find(&memos)
+	err := Db.Find(&memos)
 	if err != nil {
 		panic(err)
 	}

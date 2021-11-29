@@ -10,12 +10,18 @@ import (
 func CreateMemo(c *gin.Context) {
 	memo := model.Memo{}
 	err := c.Bind(&memo)
+	user, _ := c.Get("id")
 	if err != nil{
 		c.String(http.StatusBadRequest, "Bad request")
 		return
 	}
 	memoService :=service.MemoService{}
-	err = memoService.SetMemo(&memo)
+	validUser, ok := user.(*model.User)
+	if !ok {
+		c.String(http.StatusInternalServerError, "Server Error")
+		return
+	}
+	err = memoService.SetMemo(validUser, &memo)
 	if err != nil{
 		c.String(http.StatusInternalServerError, "Server Error")
 		return

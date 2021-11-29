@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"simple_memo/model"
@@ -15,22 +14,18 @@ func (UserService) SetUser(user *model.User) error {
 		panic(err)
 	}
 	user.Password = string(hash)
-	_, err = DbEngine.Insert(user)
-	if err!= nil{
-		fmt.Println(err)
+	if err := Db.Create(user).Error; err != nil {
+		log.Println(err)
 		return  err
 	}
 	return nil
 }
 
-func (UserService) GetUser(email string) (model.User, bool) {
+func (UserService) GetUser(email string) (model.User, error) {
 	user := model.User{}
-	result, err := DbEngine.Where("email = ?", email).Get(&user)
-	if err != nil {
-		panic(err)
+	result := Db.Where("email = ?", email).Find(&user)
+	if result.Error != nil {
+		panic(result.Error)
 	}
-	if !result {
-		log.Fatal("Not Found")
-	}
-	return user, result
+	return user, result.Error
 }

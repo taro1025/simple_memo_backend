@@ -37,8 +37,8 @@ func Auth() *jwt.GinJWTMiddleware {
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			userService := service.UserService{}
-			user, result := userService.GetUser(claims[identityKey].(string))
-			if !result {
+			user, err := userService.GetUser(claims[identityKey].(string))
+			if err != nil {
 				return nil
 			}
 			return &user
@@ -52,8 +52,8 @@ func Auth() *jwt.GinJWTMiddleware {
 			password := loginVals.Password
 
 			userService := service.UserService{}
-			user, result := userService.GetUser(email)
-			if !result {
+			user, err := userService.GetUser(email)
+			if err != nil {
 				return nil, nil
 			}
 			if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
