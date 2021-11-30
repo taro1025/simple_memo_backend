@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
@@ -14,38 +15,51 @@ import (
 
 func TestMain(m *testing.M) {
 	testUtils.Before()
+	loginBefore()
 	code := m.Run()
 	//after()
 	os.Exit(code)
 }
 
-type login struct{
-	title string
-	body *bytes.Buffer
+var validLoginInfo, invalidLoginInfo *bytes.Buffer
+var authMiddleware *jwt.GinJWTMiddleware
+
+
+func loginBefore() {
+	validLoginInfo = bytes.NewBufferString("{\"email\":\"rintaro.sakino@msetsu.com\", \"password\":\"password\"}")
+	invalidLoginInfo = bytes.NewBufferString("{\"email\":\"rintetsu.com\", \"password\":\"\"}")
+	authMiddleware = middleware.Auth()
+}
+
+type loginType struct {
+	title  string
+	body   *bytes.Buffer
 	status int
 }
 
 //TODO テストデータ用意したい
-func TestLogin(test *testing.T){
-	validInfo := bytes.NewBufferString("{\"email\":\"rintaro.sakino@msetsu.com\", \"password\":\"password\"}")
-	invalidInfo := bytes.NewBufferString("{\"email\":\"rintetsu.com\", \"password\":\"\"}")
-	var loginTests = []login {
-		{"異常:Passwordがないので", invalidInfo, 401},
-		{"正常:正しい", validInfo, 200},
+func TestLogin(test *testing.T) {
+	var loginTests = []loginType{
+		{"異常:Passwordがないので", invalidLoginInfo, 401},
+		{"正常:正しい", validLoginInfo, 200},
 	}
 	for _, tt := range loginTests {
-		test.Run(tt.title, func(t *testing.T){
-			router := setupRouter()
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request, _ = http.NewRequest("POST", "/login", tt.body)
-			c.Request.Header.Add("Content-Type", binding.MIMEJSON)
-			authMiddleware := middleware.Auth()
-			authMiddleware.LoginHandler(c)
-			router.ServeHTTP(w, c.Request)
-			if w.Result().StatusCode != tt.status {
-				test.Error("want 401 but", w.Code)
-			}
+		test.Run(tt.title, func(t *testing.T) {
+			_ = login(test, tt.body, tt.status)
 		})
 	}
+}
+
+func login(test *testing.T, body *bytes.Buffer, expectStatus int) *gin.Context {
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", body)
+	c.Request.Header.Add("Content-Type", binding.MIMEJSON)
+	authMiddleware.LoginHandler(c)
+	router.ServeHTTP(w, c.Request)
+	if w.Result().StatusCode != expectStatus {
+		test.Errorf(`Login: expect "%v", but "%v"`, expectStatus, w.Code)
+	}
+	return c
 }
