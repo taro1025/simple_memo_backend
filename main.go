@@ -9,10 +9,6 @@ import (
 	"simple_memo/controller"
 	"simple_memo/middleware"
 	"time"
-	//
-	//"jwt_work/register"
-	//"jwt_work/login"
-	//"jwt_work/user"
 )
 
 var identityKey = "id"
