@@ -14,7 +14,7 @@ func CreateUser(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Bad request")
 		return
 	}
-	userService :=service.UserService{}
+	userService :=service.UserService{Db: service.Db}
 	if err = userService.SetUser(&user); err != nil{
 		c.String(http.StatusInternalServerError, "Server Error")
 		return

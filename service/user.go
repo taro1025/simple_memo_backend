@@ -2,19 +2,22 @@ package service
 
 import (
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 	"log"
 	"simple_memo/model"
 )
 
-type UserService struct {}
+type UserService struct {
+	Db *gorm.DB
+}
 
-func (UserService) SetUser(user *model.User) error {
+func (service *UserService) SetUser(user *model.User) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		panic(err)
 	}
 	user.Password = string(hash)
-	if err := Db.Create(user).Error; err != nil {
+	if err := service.Db.Create(user).Error; err != nil {
 		log.Println(err)
 		return  err
 	}
@@ -23,7 +26,7 @@ func (UserService) SetUser(user *model.User) error {
 
 func (UserService) GetUser(email string) (model.User, error) {
 	user := model.User{}
-	result := Db.Where("email = ?", email).Find(&user)
+	result := Db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		panic(result.Error)
 	}

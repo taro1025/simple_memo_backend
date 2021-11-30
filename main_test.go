@@ -1,17 +1,22 @@
 package main
 
 import (
-	"bytes"
+	"database/sql/driver"
 	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/stretchr/testify/assert"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"simple_memo/controller"
+	"simple_memo/service"
 	"testing"
+	"time"
 )
+
+var mock sqlmock.Sqlmock
+var db *gorm.DB
 
 func TestMain(m *testing.M) {
 	before()
@@ -20,93 +25,82 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func before() {
-	//service.DbEngine
-}
-
-func TestLogin(test *testing.T) {
-	//user := model.User{Email: "test@test.com", Password: "password"}
-	//userForm, _ := json.Marshal(user)
-	body := bytes.NewBufferString("{\"email\":\"se@tst.om\", \"password\":\"password\"}")
-	fmt.Println(body)
-	//router := setupRouter()
+func TestLogin(test *testing.T){
 	w := httptest.NewRecorder()
-	ginContext, _ := gin.CreateTestContext(w)
-	ginContext.Request, _ = http.NewRequest("POST", "/v1/users/create", body)
-	ginContext.Request.Header.Add("Content-Type", binding.MIMEJSON)
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", nil)
 
-	controller.CreateUser(ginContext)
-	//router.ServeHTTP(w, c.Request)
-	assert.Equal(test, 201, w.Code)
 }
 //
-//func TestCreateUser(t *testing.T) {
-//	userTests := []struct {
-//		user model.User
-//	}{
-//		{model.User{Email: "test.com", Password: "password"}},
-//		{model.User{Email: "momo@com", Password: "njnjn"}},
-//	}
-//
-//	for _, test := range userTests {
-//		w := httptest.NewRecorder()
-//		ginContext, _ := gin.CreateTestContext(w)
-//		userForm, _ := json.Marshal(test.user)
-//		body := bytes.NewBuffer(userForm)
-//		ginContext.Request, _ = http.NewRequest("POST", "/v1/users/create", body)
-//		ginContext.Request.Header.Add("Content-Type", binding.MIMEJSON)
-//		controller.CreateUser(test.user)
-//
+//func TestCreateUser(test *testing.T) {
+//	mock.ExpectBegin()
+//	mock.ExpectExec("INSERT INTO `users` (`created_at`,`updated_at`,`deleted_at`,`email`,`password`) VALUES (?,?,?,?,?)").
+//		WithArgs(AnyTime{},AnyTime{},nil,"test@test.com",AnyString{}).
+//		WillReturnResult(sqlmock.NewResult(1, 2))
+//	mock.ExpectCommit()
+//	service := service.UserService{Db: db}
+//	_ = service.SetUser(&model.User{Email: "test@test.com", Password: "password"})
+//	if err := mock.ExpectationsWereMet(); err != nil {
+//		test.Errorf("there were unfulfilled expectations: %s", err)
 //	}
 //}
 
-//func TestIndexMemo(test *testing.T) {
-//	router := setupRouter()
-//
-//	w := httptest.NewRecorder()
-//	req, _ := http.NewRequest("GET", "/v1/memo/index", nil)
-//	router.ServeHTTP(w, req)
-//	assert.Equal(test, 200, w.Code)
-//}
-//
-//func TestCreateMemo(test *testing.T) {
-//	router := setupRouter()
-//	//User
-//	data := url.Values{"email": {"test@test.com"}, "password": {"password"}}
-//	w := httptest.NewRecorder()
-//	req, _ := http.NewRequest("POST", "/v1/users/create", strings.NewReader(data.Encode()))
-//	router.ServeHTTP(w, req)
-//	assert.Equal(test, 200, w.Code)
-//
-//	//Login
-//	w = httptest.NewRecorder()
-//	req, _ = http.NewRequest("POST", "/v1/login", strings.NewReader(data.Encode()))
-//	router.ServeHTTP(w, req)
-//	assert.Equal(test, 200, w.Code)
-//
-//	//Memo
-//	data = url.Values{"text": {"bar"}}
-//	w = httptest.NewRecorder()
-//	req, _ = http.NewRequest("POST", "/v1/memos/create", strings.NewReader(data.Encode()))
-//	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-//	router.ServeHTTP(w, req)
-//	assert.Equal(test, 201, w.Code)
-//}
+func TestMemoIndex(test *testing.T) {
+	//Simulate returned row(s)
+	mockRows := sqlmock.NewRows([]string{"created_at"}).AddRow(time.Now())
 
-//func TestLogin(test *testing.T) {
-//	router := setupRouter()
-//	data := url.Values{"email": {"test@test.com"}, "password": {"password"}}
-//	w := httptest.NewRecorder()
-//	req, _ := http.NewRequest("POST", "/v1/users/create", strings.NewReader(data.Encode()))
-//	//req, _ := http.NewRequest("POST", "/v1/login", nil)
-//	//req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-//	router.ServeHTTP(w, req)
-//	assert.Equal(test, 200, w.Code)
-//
-//	w = httptest.NewRecorder()
-//	req, _ = http.NewRequest("POST", "/v1/login", strings.NewReader(data.Encode()))
-//	//req, _ := http.NewRequest("POST", "/v1/login", nil)
-//	//req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-//	router.ServeHTTP(w, req)
-//	assert.Equal(test, 200, w.Code)
-//}
+	mock.ExpectQuery("SELECT * FROM `memos` WHERE `memos`.`deleted_at` IS NULL").
+		WillReturnRows(mockRows)
+
+	service := service.MemoService{Db: db}
+	_ = service.Index()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		test.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+func before() {
+	var err error
+	db, mock, err = GetNewDbMock()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
+func GetNewDbMock() (*gorm.DB, sqlmock.Sqlmock, error) {
+	var err error
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		return nil, mock, err
+	}
+
+	gormDB, err := gorm.Open(mysql.Dialector{
+		Config: &mysql.Config{
+			DriverName:                "mysql",
+			Conn:                      db,
+			SkipInitializeWithVersion: true,
+		},
+	}, &gorm.Config{})
+
+	if err != nil {
+		panic("miss")
+		return gormDB, mock, err
+	}
+
+	return gormDB, mock, err
+}
+
+type AnyTime struct{}
+
+// Match satisfies sqlmock.Argument interface
+func (a AnyTime) Match(v driver.Value) bool {
+	_, ok := v.(time.Time)
+	return ok
+}
+
+type AnyString struct{}
+
+func (a AnyString) Match(v driver.Value) bool {
+	_, ok := v.(string)
+	return ok
+}

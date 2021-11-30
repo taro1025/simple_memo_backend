@@ -15,7 +15,7 @@ func CreateMemo(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Bad request")
 		return
 	}
-	memoService :=service.MemoService{}
+	memoService :=service.MemoService{Db: service.Db}
 	validUser, ok := user.(*model.User)
 	if !ok {
 		c.String(http.StatusInternalServerError, "Server Error")
@@ -32,7 +32,7 @@ func CreateMemo(c *gin.Context) {
 }
 
 func Index(c *gin.Context) {
-	memoService :=service.MemoService{}
+	memoService :=service.MemoService{Db: service.Db}
 	memos := memoService.Index()
 	c.JSONP(http.StatusOK, gin.H{
 		"message": "ok",

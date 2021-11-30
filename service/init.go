@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/go-xorm/xorm"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -9,13 +8,11 @@ import (
 	"simple_memo/model"
 )
 
-var DbEngine *xorm.Engine
-//var DSN string
 var Db *gorm.DB
 func init() {
 	user := "root:@tcp(127.0.0.1:3306)/"
 	DbName := "simple_memo"
-	charSet := "?charset=utf8"
+	charSet := "?charset=utf8&parseTime=True"
 	DSN := user + DbName + charSet
 
 	var err error
