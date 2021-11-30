@@ -1,5 +1,7 @@
 package testUtils
 
+// 統合テストする日が来たら役立つだろう
+
 import (
 	"database/sql/driver"
 	"fmt"
