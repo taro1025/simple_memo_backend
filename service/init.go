@@ -1,40 +1,26 @@
 package service
 
 import (
-	"database/sql"
-	"fmt"
-	"github.com/go-xorm/xorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"log"
 	"simple_memo/model"
 )
 
-var DbEngine *xorm.Engine
-
+var Db *gorm.DB
 func init() {
 	user := "root:@tcp(127.0.0.1:3306)/"
 	DbName := "simple_memo"
-	charSet := "?charset=utf8"
+	charSet := "?charset=utf8&parseTime=True"
 	DSN := user + DbName + charSet
 
-	//DBがなければ作成
-	db, err := sql.Open("mysql", user)
+	var err error
+	Db, err = gorm.Open(mysql.Open(DSN), &gorm.Config{})
 	if err != nil {
-		panic(err)
+		panic("failed to connect database")
 	}
-	defer db.Close()
-	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + DbName)
-	if err != nil {
-		panic(err)
-	}
-
-	//xormでデータベースと構造体Memoをマッピング
-	DbEngine, err = xorm.NewEngine("mysql", DSN)
-	if err != nil && err.Error() != "" {
-		log.Fatal(err.Error())
-	}
-
-	DbEngine.ShowSQL(true)           //クエリのログを出す
-	DbEngine.SetMaxOpenConns(2)      //同時接続の数？
-	DbEngine.Sync2(new(model.Memo)) 	   //NewEngineで指定したsimple_memoDBとMemo構造を同期させる
-	fmt.Println("init data base ok")
+	Db.AutoMigrate(&model.User{}, &model.Memo{})
+	Db.Logger.LogMode(logger.Info)
+	log.Println("init data base ok")
 }
