@@ -10,12 +10,12 @@ import (
 
 func CreateUser(c *gin.Context) {
 	user := model.User{}
-	err := c.Bind(&user)
+	err := c.Bind(&user) //ログイン済みユーザーにはクッキーとしてJWTに埋め込まれてる。
 	if err != nil{
 		c.String(http.StatusBadRequest, "Bad request")
 		return
 	}
-	userService :=service.UserService{Db: service.Db}
+	userService :=service.UserService{Db: service.Db} //Dbをここで渡す事でモックのテストもできるように
 	if err = userService.SetUser(&user); err != nil{
 		c.String(http.StatusInternalServerError, "Server Error")
 		return

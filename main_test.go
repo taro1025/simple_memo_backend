@@ -37,7 +37,7 @@ type loginType struct {
 	status int
 }
 
-//TODO テストデータ用意したい
+//TODO テストデータ用意したい。現状開発環境に入ってるデータをvalidLoginInfoとして扱ってる
 func TestLogin(test *testing.T) {
 	var loginTests = []loginType{
 		{"異常:Passwordがないので", invalidLoginInfo, 401},
