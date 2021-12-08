@@ -34,6 +34,7 @@ func (service *MemoService) Essence(userId uint) []model.Memo{
 
 func (service *MemoService) Discordings(userId uint) []model.Memo{
 	memos := make([]model.Memo, 0)
+	destroyOldMemos(service, userId)
 	setDiscord(service, userId)
 	err := service.Db.Where("user_id = ? AND discording = ?", userId, true).Find(&memos).Error
 	if err != nil {
@@ -51,9 +52,21 @@ func (service *MemoService) All() []model.Memo{
 	return memos
 }
 
+func destroyOldMemos(service *MemoService, userId uint) error {
+	destroyDate := time.Now().AddDate(0, -1, 0)
+	err := service.Db.Model(&model.Memo{}).
+		Where("user_id = ? AND discording = ? AND created_at < ? AND permanent = ?", userId, true, destroyDate, false).Delete(model.Memo{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func setDiscord(service *MemoService, userId uint) error {
-	discordDate := time.Now().AddDate(0, 0, -3)
-	err := service.Db.Model(&model.Memo{}).Where("user_id = ? AND discording = ? AND created_at < ?", userId, false, discordDate).Update("Discording", "1").Error
+	discordDate := time.Now().AddDate(0, 0, -1)
+	err := service.Db.Model(&model.Memo{}).
+		Where("user_id = ? AND discording = ? AND created_at < ? AND permanent = ?", userId, false, discordDate, false).
+		Update("Discording", "1").Error
 	if err != nil {
 		return err
 	}
