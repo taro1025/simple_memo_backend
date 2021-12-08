@@ -14,6 +14,7 @@ import (
 var Mock sqlmock.Sqlmock
 var TestDb *gorm.DB
 
+// Before ...全てのテストで共通の準備部分をここに
 func Before() {
 	var err error
 	TestDb, Mock, err = getNewDbMock()

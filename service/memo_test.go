@@ -15,7 +15,7 @@ func TestMemoIndex(test *testing.T) {
 		WillReturnRows(mockRows)
 
 	service := MemoService{Db: testUtils.TestDb}
-	_ = service.Index()
+	_ = service.All()
 	if err := testUtils.Mock.ExpectationsWereMet(); err != nil {
 		test.Errorf("there were unfulfilled expectations: %s", err)
 	}

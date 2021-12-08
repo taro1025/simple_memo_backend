@@ -17,7 +17,7 @@ func (service *UserService) SetUser(user *model.User) error {
 		panic(err)
 	}
 	user.Password = string(hash)
-	if err := service.Db.Create(user).Error; err != nil {
+	if err := service.Db.Create(user).Error; err != nil {	//service.Db.Debug().Createでsqlを表示できる
 		log.Println(err)
 		return  err
 	}

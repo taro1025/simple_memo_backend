@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"simple_memo/model"
+	"time"
 )
 
 type MemoService struct {
@@ -21,12 +22,53 @@ func (service *MemoService) SetMemo(user *model.User, memo *model.Memo) error {
 //TODO リミットつけた方がいいかとも思ったけど、1日で消えるメモアプリだしいいか
 //err := DbEngine.Limit(10, 0).Find(&memos)  一応こうやると制限つけられる
 
-func (service *MemoService) Index() []model.Memo{
+func (service *MemoService) Essence(userId uint) []model.Memo{
 	memos := make([]model.Memo, 0)
-	err := service.Db.Find(&memos).Error
+	setDiscord(service, userId)
+	err := service.Db.Where("user_id = ? AND discording = ?", userId, false).Find(&memos).Error
 	if err != nil {
-		//panic(err)
 		return nil
 	}
 	return memos
+}
+
+func (service *MemoService) Discordings(userId uint) []model.Memo{
+	memos := make([]model.Memo, 0)
+	destroyOldMemos(service, userId)
+	setDiscord(service, userId)
+	err := service.Db.Where("user_id = ? AND discording = ?", userId, true).Find(&memos).Error
+	if err != nil {
+		return nil
+	}
+	return memos
+}
+
+func (service *MemoService) All() []model.Memo{
+	memos := make([]model.Memo, 0)
+	err := service.Db.Find(&memos).Error
+	if err != nil {
+		return nil
+	}
+	return memos
+}
+
+func destroyOldMemos(service *MemoService, userId uint) error {
+	destroyDate := time.Now().AddDate(0, -1, 0)
+	err := service.Db.Model(&model.Memo{}).
+		Where("user_id = ? AND discording = ? AND created_at < ? AND permanent = ?", userId, true, destroyDate, false).Delete(model.Memo{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func setDiscord(service *MemoService, userId uint) error {
+	discordDate := time.Now().AddDate(0, 0, -1)
+	err := service.Db.Model(&model.Memo{}).
+		Where("user_id = ? AND discording = ? AND created_at < ? AND permanent = ?", userId, false, discordDate, false).
+		Update("Discording", "1").Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
