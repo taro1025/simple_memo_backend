@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var identityKey = "id"
+var IdentityKey = "id"
 
 type login struct {
 	Email    string `form:"email" json:"email" binding:"email"`
@@ -25,11 +25,11 @@ func Auth() *jwt.GinJWTMiddleware {
 		Key:         []byte("secret key"),
 		Timeout:     24 * 365 * time.Hour,
 		MaxRefresh:  time.Hour,
-		IdentityKey: identityKey,
+		IdentityKey: IdentityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*model.User); ok {
 				return jwt.MapClaims{
-					identityKey: v.Email,
+					IdentityKey: v.Email,
 				}
 			}
 			return jwt.MapClaims{}
@@ -37,7 +37,7 @@ func Auth() *jwt.GinJWTMiddleware {
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			userService := service.UserService{}
-			user, err := userService.GetUser(claims[identityKey].(string))
+			user, err := userService.GetUser(claims[IdentityKey].(string))
 			if err != nil {
 				return nil
 			}

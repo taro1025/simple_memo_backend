@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var identityKey = "id"
+var IdentityKey = "id"
 
 func main() {
 	router := setupRouter()
@@ -23,9 +23,9 @@ func helloHandler(c *gin.Context) {
 		log.Printf("no cookie")
 	} else {log.Printf("Ok cookie")}
 	//claims := jwt.ExtractClaims(c)
-	//user, _ := c.Get(identityKey)
+	//user, _ := c.Get(IdentityKey)
 	c.JSON(200, gin.H{
-		//"userID":   claims[identityKey],
+		//"userID":   claims[IdentityKey],
 		//"userName": user.(*model.User).Email,
 		"text":     "Hello World.",
 	})
